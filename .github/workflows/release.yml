@@ -1,0 +1,61 @@
+name: release
+
+# Builds cross-platform static binaries and attaches them to a GitHub Release.
+# Trigger: push a tag like v0.1.0, or run manually from the Actions tab.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build for (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build static binaries
+        run: |
+          mkdir -p dist
+          for target in linux/arm64 linux/amd64 darwin/arm64 darwin/amd64; do
+            os=${target%/*}; arch=${target#*/}
+            echo "building $os/$arch"
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 \
+              go build -trimpath -ldflags="-s -w" \
+              -o "dist/antigravity2api-${os}-${arch}" .
+          done
+          ls -la dist/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: dist/*
+          body: |
+            Static single-file binaries (no runtime dependencies).
+
+            | platform | file |
+            |---|---|
+            | iOS iSH (Alpine aarch64) / ARM Linux | `antigravity2api-linux-arm64` |
+            | Linux x86_64 | `antigravity2api-linux-amd64` |
+            | macOS (Apple Silicon) | `antigravity2api-darwin-arm64` |
+            | macOS (Intel) | `antigravity2api-darwin-amd64` |
+
+            Setup: OAuth client credentials via environment, accounts as JSON files in `auth/` —
+            see the [README](https://github.com/${{ github.repository }}#readme).
