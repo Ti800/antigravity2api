@@ -33,11 +33,13 @@ func (a *App) handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := a.Auth.Token(r.Context(), acct)
 	if err != nil {
+		a.logFailure(r, "token refresh failed: %v", err)
 		writeJSON(w, http.StatusBadGateway, errBody("token refresh failed"))
 		return
 	}
 	project, err := a.ensureProject(r.Context(), acct, token)
 	if err != nil {
+		a.logFailure(r, "project lookup failed: %v", err)
 		writeJSON(w, http.StatusBadGateway, errBody("project lookup failed"))
 		return
 	}
@@ -77,6 +79,7 @@ func (a *App) ensureProject(ctx context.Context, acct *auth.Account, token strin
 func (a *App) streamChat(w http.ResponseWriter, r *http.Request, token string, raw []byte, model string) {
 	resp, err := a.Up.Stream(r.Context(), token, raw)
 	if err != nil {
+		a.logFailure(r, "stream failed: %v", err)
 		writeUpstreamError(w, err)
 		return
 	}
@@ -161,11 +164,13 @@ func (a *App) streamChat(w http.ResponseWriter, r *http.Request, token string, r
 func (a *App) onceChat(w http.ResponseWriter, r *http.Request, token string, raw []byte, model string) {
 	body, err := a.Up.Generate(r.Context(), token, raw)
 	if err != nil {
+		a.logFailure(r, "generate failed: %v", err)
 		writeUpstreamError(w, err)
 		return
 	}
 	chunk, ok := translate.ParseChunk(body)
 	if !ok {
+		a.logFailure(r, "unreadable upstream response")
 		writeJSON(w, http.StatusBadGateway, errBody("upstream returned an unreadable response"))
 		return
 	}

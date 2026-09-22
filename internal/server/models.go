@@ -85,6 +85,13 @@ var modelAliases = map[string]string{
 	"gemini-3.7-flash-thinking": "gemini-3.7-flash-high",
 	"gemini-3.6-flash":          "gemini-3.6-flash-medium",
 	"gemini-3.1-pro":            "gemini-pro-agent",
+	// Retired names from the pre-rewrite model list. Route them onto the closest
+	// live model so stale client configurations keep working instead of 404ing.
+	"gemini-3.5-flash":               "gemini-3.8-flash-medium",
+	"gemini-3.5-flash-thinking":      "gemini-3.8-flash-high",
+	"gemini-3.5-flash-thinking-lite": "gemini-3.5-flash-lite",
+	"gemini-flash-lite":              "gemini-3.5-flash-lite",
+	"gemini-auto":                    "gemini-3.8-flash-medium",
 }
 
 // normalizeModel resolves aliases; unknown names pass through untouched.

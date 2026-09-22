@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/subtle"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -108,6 +109,16 @@ func (a *App) logRequest(r *http.Request, status int, d time.Duration) {
 	}
 	os.Stdout.WriteString(time.Now().Format("15:04:05") + " " + ip + " " + r.Method + " " + r.URL.Path +
 		" -> " + itoa(status) + " (" + itoa(int(d.Milliseconds())) + "ms)\n")
+}
+
+// logFailure records why a request failed; the request log only carries the
+// status code, which is not enough to debug upstream rejections.
+func (a *App) logFailure(r *http.Request, format string, args ...any) {
+	if !a.Cfg.LogRequests {
+		return
+	}
+	os.Stdout.WriteString(time.Now().Format("15:04:05") + " " + r.Method + " " + r.URL.Path +
+		" !! " + fmt.Sprintf(format, args...) + "\n")
 }
 
 func itoa(n int) string {
