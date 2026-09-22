@@ -50,7 +50,12 @@ export ANTIGRAVITY_CLIENT_ID=...
 export ANTIGRAVITY_CLIENT_SECRET=...
 ```
 
-`scripts/service.sh` sources a `.env` file in the same directory if one exists. That file is gitignored.
+`scripts/service.sh` sources a `.env` file in the same directory if one exists (exporting the
+variables before launching the binary). That file is gitignored.
+
+The IDE user agent is pinned in the binary (`antigravity/ide/2.5.5 (...)`); Google occasionally
+gates newer models behind a later IDE version, so `ANTIGRAVITY_USER_AGENT` overrides it without
+a rebuild.
 
 Each account is a JSON file in `auth/`:
 
@@ -74,6 +79,27 @@ sh scripts/service.sh start
 In Minis, add an OpenAI-compatible provider with base URL `http://127.0.0.1:8081` and appendV1Suffix enabled. Bind chats to a model group that has a fallback, not to a single local model. A single-model binding fails hard while the service is down.
 
 `/var/minis` drops the executable bit. If the binary fails with `Permission denied`, copy it to `/tmp`, run `chmod +x`, and copy it back.
+
+## Models
+
+`GET /v1/models` returns the ids the upstream currently advertises (from
+`fetchAvailableModels`; cached for ten minutes, with a small static fallback list if the fetch
+fails). Request them verbatim — the current flash generation is tiered by wire id
+(`gemini-3.8-flash-low` / `-medium` / `-high`), the pro tier is `gemini-pro-agent`, and
+`claude-*` / `gpt-oss-*` ids pass through to those models.
+
+A few legacy spellings resolve automatically so older configurations keep working:
+
+| requested | resolves to |
+|---|---|
+| `gemini-3.8-flash` | `gemini-3.8-flash-medium` |
+| `gemini-3.8-flash-thinking` | `gemini-3.8-flash-high` |
+| `gemini-3.7-flash` / `gemini-3.6-flash` | the `-medium` tier of that generation |
+| `gemini-3.1-pro` | `gemini-pro-agent` |
+
+Replayed tool calls must carry a thought signature; when no captured signature exists, the
+request fills the official `skip_thought_signature_validator` sentinel on the first
+functionCall of the replayed model turn (Gemini-family models only).
 
 ## Endpoints
 

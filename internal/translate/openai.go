@@ -55,11 +55,12 @@ type ToolCall struct {
 }
 
 type part struct {
-	Text         string        `json:"text,omitempty"`
-	Thought      bool          `json:"thought,omitempty"`
-	FunctionCall *functionCall `json:"functionCall,omitempty"`
-	FunctionResp *functionResp `json:"functionResponse,omitempty"`
-	InlineData   *inlineData   `json:"inlineData,omitempty"`
+	Text             string        `json:"text,omitempty"`
+	Thought          bool          `json:"thought,omitempty"`
+	FunctionCall     *functionCall `json:"functionCall,omitempty"`
+	FunctionResp     *functionResp `json:"functionResponse,omitempty"`
+	InlineData       *inlineData   `json:"inlineData,omitempty"`
+	ThoughtSignature string        `json:"thoughtSignature,omitempty"`
 }
 
 type functionCall struct {
@@ -99,6 +100,31 @@ type Request struct {
 	GenerationConfig  map[string]any `json:"generationConfig,omitempty"`
 	Tools             []any          `json:"tools,omitempty"`
 	SessionID         string         `json:"sessionId,omitempty"`
+}
+
+// thoughtSignatureBypass is the official validator-bypass sentinel. The Gemini
+// wire requires a thought signature on the first functionCall of a model turn;
+// when a replayed call has no captured signature, this token is accepted in
+// its place (mirrors OpenCodex's THOUGHT_SIGNATURE_BYPASS).
+const thoughtSignatureBypass = "skip_thought_signature_validator"
+
+// isGeminiWireModel reports whether the wire model id speaks the Gemini dialect
+// that requires the sentinel. It is a Gemini-only control token: injecting it
+// into claude-*/gpt-oss-* requests is wrong, so the check deliberately does not
+// match those. Identity is reduced to its final path/transport segment first.
+func isGeminiWireModel(model string) bool {
+	if i := strings.LastIndex(model, "/"); i >= 0 {
+		model = model[i+1:]
+	}
+	if i := strings.LastIndex(model, ":"); i >= 0 {
+		model = model[i+1:]
+	}
+	model = strings.ToLower(model)
+	if !strings.HasPrefix(model, "gemini") || len(model) <= len("gemini") {
+		return false
+	}
+	c := model[len("gemini")]
+	return c == '-' || c == '.' || (c >= '0' && c <= '9')
 }
 
 // FromChat builds an envelope from an OpenAI chat request.
@@ -143,6 +169,18 @@ func FromChat(req ChatRequest, project, model string) Envelope {
 					args = json.RawMessage("{}")
 				}
 				c.Parts = append(c.Parts, part{FunctionCall: &functionCall{Name: tc.Function.Name, Args: args}})
+			}
+			// The wire requires a thought signature on the first functionCall of a
+			// replayed model turn; fill the bypass sentinel when none was captured.
+			if role == "model" && len(m.ToolCalls) > 0 && isGeminiWireModel(model) {
+				for i := range c.Parts {
+					if c.Parts[i].FunctionCall != nil {
+						if c.Parts[i].ThoughtSignature == "" {
+							c.Parts[i].ThoughtSignature = thoughtSignatureBypass
+						}
+						break
+					}
+				}
 			}
 			if len(c.Parts) == 0 {
 				c.Parts = []part{{Text: ""}}

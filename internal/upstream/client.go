@@ -13,6 +13,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -63,11 +64,17 @@ func New(timeout time.Duration) *Client {
 		DisableCompression:     false,
 		MaxResponseHeaderBytes: 32 << 10,
 	}
-	return &Client{
+	c := &Client{
 		HTTP:      &http.Client{Transport: tr, Timeout: timeout},
 		BaseURL:   BaseURL,
 		UserAgent: IDEUserAgent,
 	}
+	// Google gates newer models behind a later IDE version occasionally; allow an
+	// override without a rebuild.
+	if ua := strings.TrimSpace(os.Getenv("ANTIGRAVITY_USER_AGENT")); ua != "" {
+		c.UserAgent = ua
+	}
+	return c
 }
 
 // StatusError is a non-2xx upstream response. Body is capped and never logged
@@ -158,6 +165,17 @@ func (c *Client) OnboardUser(ctx context.Context, token, tier string) (string, e
 		resp, err := c.post(ctx, onboardPath, token, payload)
 		if err != nil {
 			return "", err
+		}
+		// Transient upstream failures keep the poll going; hard 4xx gives up.
+		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
+			_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
+			resp.Body.Close()
+			select {
+			case <-ctx.Done():
+				return "", ctx.Err()
+			case <-time.After(2 * time.Second):
+			}
+			continue
 		}
 		if resp.StatusCode != http.StatusOK {
 			return "", readErr(resp)

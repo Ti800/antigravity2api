@@ -62,3 +62,50 @@ func TestExtractThoughtAndTool(t *testing.T) {
 		t.Errorf("usage: %+v", d.Usage)
 	}
 }
+
+func TestReplayedToolCallGetsSignatureSentinel(t *testing.T) {
+	var tc ToolCall
+	tc.ID = "call_1"
+	tc.Type = "function"
+	tc.Function.Name = "get_weather"
+	tc.Function.Arguments = `{"location":"Beijing"}`
+
+	req := ChatRequest{
+		Model: "gemini-3.8-flash-medium",
+		Messages: []ChatMessage{
+			{Role: "user", Content: json.RawMessage(`"weather?"`)},
+			{Role: "assistant", Content: json.RawMessage(`""`), ToolCalls: []ToolCall{tc}},
+			{Role: "tool", Name: "get_weather", Content: json.RawMessage(`"sunny"`)},
+		},
+	}
+	env := FromChat(req, "p", req.Model)
+	raw, err := json.Marshal(env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), `"thoughtSignature":"skip_thought_signature_validator"`) {
+		t.Fatalf("sentinel missing: %s", raw)
+	}
+	var modelTurn *content
+	for i := range env.Request.Contents {
+		if env.Request.Contents[i].Role == "model" {
+			modelTurn = &env.Request.Contents[i]
+			break
+		}
+	}
+	if modelTurn == nil || len(modelTurn.Parts) == 0 ||
+		modelTurn.Parts[0].FunctionCall == nil || modelTurn.Parts[0].ThoughtSignature == "" {
+		t.Fatalf("sentinel not on the first functionCall: %+v", modelTurn)
+	}
+
+	// The sentinel is Gemini-only; it must not leak into other models.
+	req.Model = "claude-sonnet-4-6"
+	env2 := FromChat(req, "p", req.Model)
+	raw2, err := json.Marshal(env2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw2), "skip_thought_signature_validator") {
+		t.Fatalf("sentinel leaked into non-Gemini model: %s", raw2)
+	}
+}
