@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Ti800/gemini-web2api-ios/internal/auth"
-	"github.com/Ti800/gemini-web2api-ios/internal/config"
-	"github.com/Ti800/gemini-web2api-ios/internal/upstream"
+	"github.com/Ti800/antigravity2api/internal/auth"
+	"github.com/Ti800/antigravity2api/internal/config"
+	"github.com/Ti800/antigravity2api/internal/upstream"
 )
 
 // App is the process-wide state. It is safe for concurrent requests.

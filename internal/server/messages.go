@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Ti800/gemini-web2api-ios/internal/translate"
+	"github.com/Ti800/antigravity2api/internal/translate"
 )
 
 // messageRequest is the subset of the Anthropic Messages API this proxy accepts.

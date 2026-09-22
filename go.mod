@@ -1,4 +1,4 @@
-module github.com/Ti800/gemini-web2api-ios
+module github.com/Ti800/antigravity2api
 
 go 1.23
 

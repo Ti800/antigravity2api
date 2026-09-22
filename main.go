@@ -13,10 +13,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Ti800/gemini-web2api-ios/internal/auth"
-	"github.com/Ti800/gemini-web2api-ios/internal/config"
-	"github.com/Ti800/gemini-web2api-ios/internal/server"
-	"github.com/Ti800/gemini-web2api-ios/internal/upstream"
+	"github.com/Ti800/antigravity2api/internal/auth"
+	"github.com/Ti800/antigravity2api/internal/config"
+	"github.com/Ti800/antigravity2api/internal/server"
+	"github.com/Ti800/antigravity2api/internal/upstream"
 )
 
 var Version = "dev"
@@ -29,7 +29,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("gemini-web2api-ios %s\n", Version)
+		fmt.Printf("antigravity2api %s\n", Version)
 		os.Exit(0)
 	}
 
@@ -70,7 +70,7 @@ func main() {
 		MaxHeaderBytes:    1 << 20,
 	}
 
-	fmt.Printf("gemini-web2api-ios %s\n", Version)
+	fmt.Printf("antigravity2api %s\n", Version)
 	fmt.Printf("  listening: http://%s:%d\n", cfg.Host, cfg.Port)
 	fmt.Printf("  accounts:  %d\n", store.Count())
 

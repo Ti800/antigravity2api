@@ -1,4 +1,4 @@
-# gemini-web2api-ios
+# antigravity2api
 
 A local proxy that exposes your own Antigravity subscription as an OpenAI- and Claude-compatible API. It is built to run inside iSH on iOS and to be consumed by Minis.
 
@@ -29,14 +29,14 @@ The inbound protocol and the upstream protocol do not import each other. Support
 ## Build
 
 ```sh
-go build -trimpath -ldflags="-s -w" -o gemini-web2api-ios .
+go build -trimpath -ldflags="-s -w" -o antigravity2api .
 ```
 
 The only dependency is `github.com/google/uuid`. On iSH the bootstrap Go segfaults when it tries to hand off to a downloaded toolchain. Call the toolchain binary directly:
 
 ```sh
 TC=$(ls -d /root/go/pkg/mod/golang.org/toolchain@*/ | head -1)
-"$TC/bin/go" build -trimpath -ldflags="-s -w" -o gemini-web2api-ios .
+"$TC/bin/go" build -trimpath -ldflags="-s -w" -o antigravity2api .
 ```
 
 The binary is about 6.3 MB. Idle heap is about 0.5 MB; total process size is about 12 MB.

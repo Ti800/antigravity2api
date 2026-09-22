@@ -4,7 +4,7 @@
 umask 077
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || exit 1
 DIR=${DIR:-$SCRIPT_DIR}; DIR=$(CDPATH= cd -- "$DIR" && pwd -P) || exit 1
-BIN="$DIR/gemini-web2api-ios"
+BIN="$DIR/antigravity2api"
 PIDFILE="$DIR/server.pid"
 PORTFILE="$DIR/server.port"
 LOCK="$DIR/.service.lock"

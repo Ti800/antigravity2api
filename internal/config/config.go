@@ -93,11 +93,11 @@ func Load(path string) (Config, error) {
 }
 
 // Find looks for config.json next to the working directory, then under
-// ~/.config/gemini-web2api-ios/.
+// ~/.config/antigravity2api/.
 func Find() string {
 	paths := []string{"./config.json"}
 	if home, err := os.UserHomeDir(); err == nil {
-		paths = append(paths, filepath.Join(home, ".config", "gemini-web2api-ios", "config.json"))
+		paths = append(paths, filepath.Join(home, ".config", "antigravity2api", "config.json"))
 	}
 	for _, p := range paths {
 		if _, err := os.Stat(p); err == nil {

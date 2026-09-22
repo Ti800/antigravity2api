@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/Ti800/gemini-web2api-ios/internal/auth"
-	"github.com/Ti800/gemini-web2api-ios/internal/translate"
-	"github.com/Ti800/gemini-web2api-ios/internal/upstream"
+	"github.com/Ti800/antigravity2api/internal/auth"
+	"github.com/Ti800/antigravity2api/internal/translate"
+	"github.com/Ti800/antigravity2api/internal/upstream"
 )
 
 func (a *App) handleChat(w http.ResponseWriter, r *http.Request) {

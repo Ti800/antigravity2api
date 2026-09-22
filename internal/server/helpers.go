@@ -70,7 +70,7 @@ func writeSSEDone(w http.ResponseWriter) {
 
 func (a *App) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
-		"service":  "gemini-web2api-ios",
+		"service":  "antigravity2api",
 		"status":   "ok",
 		"pid":      os.Getpid(),
 		"version":  a.Version,
