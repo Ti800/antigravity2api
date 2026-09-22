@@ -1,0 +1,11 @@
+{
+  "port": 8081,
+  "host": "127.0.0.1",
+  "api_keys": [],
+  "auth_dir": "auth",
+  "request_timeout_sec": 180,
+  "log_requests": true,
+  "gomaxprocs": 1,
+  "gc_percent": 50,
+  "memory_limit_mb": 48
+}

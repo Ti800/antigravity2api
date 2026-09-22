@@ -1,0 +1,9 @@
+/gemini-web2api-ios
+/server.log
+/server.pid
+/server.port
+/.service.lock
+/config.json
+/.env
+/auth/*.json
+!/auth/.gitkeep
