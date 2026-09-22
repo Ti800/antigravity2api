@@ -72,5 +72,25 @@ func (a *App) models(r *http.Request) []string {
 }
 
 func fallbackModels() []string {
-	return []string{"gemini-3.5-flash", "gemini-3.1-pro"}
+	return []string{"gemini-3.8-flash-medium", "gemini-3.8-flash-high", "gemini-pro-agent"}
+}
+
+// modelAliases maps loose or legacy names onto the concrete wire ids the
+// upstream accepts. A bare "gemini-3.8-flash" is a 404: flash tiers are
+// carried as suffixes, and the pro tiers have their own agent ids.
+var modelAliases = map[string]string{
+	"gemini-3.8-flash":          "gemini-3.8-flash-medium",
+	"gemini-3.8-flash-thinking": "gemini-3.8-flash-high",
+	"gemini-3.7-flash":          "gemini-3.7-flash-medium",
+	"gemini-3.7-flash-thinking": "gemini-3.7-flash-high",
+	"gemini-3.6-flash":          "gemini-3.6-flash-medium",
+	"gemini-3.1-pro":            "gemini-pro-agent",
+}
+
+// normalizeModel resolves aliases; unknown names pass through untouched.
+func normalizeModel(name string) string {
+	if mapped, ok := modelAliases[name]; ok {
+		return mapped
+	}
+	return name
 }

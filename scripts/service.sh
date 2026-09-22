@@ -98,8 +98,9 @@ start_service() {
 	touch "$DIR/server.log" && chmod 600 "$DIR/server.log" || return 1
 	cd "$DIR" || return 1
 	# Local-only credentials. The file is gitignored; the process needs the
-	# OAuth client id and secret to refresh tokens.
-	[ -f "$DIR/.env" ] && . "$DIR/.env"
+	# OAuth client id and secret to refresh tokens. set -a exports them —
+	# sourcing alone leaves them as shell-local variables the child never sees.
+	if [ -f "$DIR/.env" ]; then set -a; . "$DIR/.env"; set +a; fi
 	nohup "$BIN" -port "$chosen" -config "$CONF" >> "$DIR/server.log" 2>&1 &
 	child=$!
 	atomic_write "$PIDFILE" "$child" && atomic_write "$PORTFILE" "$chosen" || return 1

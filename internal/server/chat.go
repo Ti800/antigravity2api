@@ -23,8 +23,9 @@ func (a *App) handleChat(w http.ResponseWriter, r *http.Request) {
 	}
 	model := req.Model
 	if model == "" {
-		model = "gemini-3.5-flash"
+		model = "gemini-3.8-flash-medium"
 	}
+	model = normalizeModel(model)
 	acct := a.Auth.Pick()
 	if acct == nil {
 		writeJSON(w, http.StatusServiceUnavailable, errBody("no account configured"))
