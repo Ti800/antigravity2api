@@ -103,6 +103,16 @@ Minis 里添加 OpenAI 兼容 provider，Base URL 填 `http://127.0.0.1:8081`，
 
 杀掉 Minis App 会连带整个环境：cron、nohup、任何 goroutine 都随之消失，除了重新 `sh scripts/service.sh start` 没有别的恢复手段。低电量模式会在约两分钟内杀掉后台进程——需要服务跨 App 切换存活时请关掉它。
 
+### 宿主环境会周期性回收 Go 进程（2026-09-22 实测）
+
+参考设备上，iOS 的 shell 环境大约**每 180 秒**向 **Go** 进程发送 SIGKILL——已跨 Go 1.23/1.26
+工具链、不同二进制位置与运行参数验证；python/shell 进程不受影响。`scripts/keepalive.sh`
+是一个 shell 侧看护（shell 循环不受回收影响），能在数秒内把服务拉回来：
+
+```sh
+nohup sh scripts/keepalive.sh >/dev/null 2>&1 &
+```
+
 ## License
 
 MIT

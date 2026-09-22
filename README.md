@@ -112,6 +112,18 @@ functionCall of the replayed model turn (Gemini-family models only).
 
 Killing the Minis app kills the whole environment. cron, nohup and any goroutine die with it, so there is no recovery short of running `sh scripts/service.sh start` again. Low Power Mode kills background processes within about two minutes. Turn it off if the service needs to outlive an app switch.
 
+### The host environment recycles Go processes (observed 2026-09-22)
+
+On the reference device the iOS shell environment SIGKILLs **Go** processes about
+**every 180 seconds** — confirmed across Go 1.23/1.26 toolchains, different binary
+locations and runtime flags; python/shell processes are unaffected. `scripts/keepalive.sh`
+is a shell-side watchdog (shell loops survive the recycling) that restarts the service
+within seconds, so a Go service stays available despite the recycling:
+
+```sh
+nohup sh scripts/keepalive.sh >/dev/null 2>&1 &
+```
+
 ## License
 
 MIT
